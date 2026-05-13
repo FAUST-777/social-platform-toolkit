@@ -3,6 +3,7 @@ from __future__ import annotations
 from hot_products.settings import Settings
 from hot_products.sources.base import ProductSource
 from hot_products.sources.custom_json import CustomJsonSource
+from hot_products.sources.tiktok_profile import TikTokProfileSource
 from hot_products.sources.tiktok_shop import TikTokShopSearchSource
 
 
@@ -16,6 +17,16 @@ def build_sources(config: dict, settings: Settings) -> list[ProductSource]:
             TikTokShopSearchSource(
                 urls=list(tiktok_config.get("urls") or []),
                 timeout_seconds=settings.request_timeout_seconds,
+            )
+        )
+
+    profile_config = source_config.get("tiktok_profile", {})
+    if profile_config.get("enabled", False):
+        sources.append(
+            TikTokProfileSource(
+                usernames=list(profile_config.get("usernames") or []),
+                max_videos=int(profile_config.get("max_videos") or 20),
+                timeout_ms=settings.request_timeout_seconds * 1000,
             )
         )
 

@@ -15,6 +15,9 @@ dependencies = [
   "tenacity>=8.2.3",
 ]
 
+[project.optional-dependencies]
+playwright = ["playwright>=1.44.0"]
+
 [project.scripts]
 hot-products = "hot_products.cli:main"
 

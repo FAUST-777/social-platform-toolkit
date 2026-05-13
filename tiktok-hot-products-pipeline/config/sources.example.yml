@@ -18,6 +18,16 @@ sources:
       - "https://shop.tiktok.com/us/search?q=live%20shopping"
       - "https://shop.tiktok.com/us/search?q=tiktok%20made%20me%20buy%20it"
 
+  tiktok_profile:
+    enabled: false
+    # 爬取公開 TikTok 帳號頁面的影片清單（需安裝 Playwright）
+    # 安裝：pip install playwright && playwright install chromium
+    # 適合追蹤自家頻道和 KOL 頻道的最新影片數據（不需登入）
+    usernames:
+      - orderpally_official   # 公司頻道帳號
+      # - kol_username_1
+    max_videos: 20
+
   custom_json:
     enabled: false
     # Use this for Apify, internal scrapers, or licensed social-commerce data vendors.
