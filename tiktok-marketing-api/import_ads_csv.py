@@ -23,13 +23,36 @@ from google.oauth2.service_account import Credentials
 
 ADVERTISER_ID = "[REDACTED-ADVERTISER-ID]"
 
+# 欄位順序依用戶自訂格式（KOL 在第9欄，時段在第19欄）
+# 第 2-6 欄（廣告帳戶ID～廣告組名稱）寫入後會自動隱藏
 AD_HEADERS = [
-    "日期", "廣告帳戶ID", "活動ID", "活動名稱", "廣告組ID", "廣告組名稱",
-    "廣告ID", "廣告名稱",
-    "花費", "曝光次數", "點擊次數", "觸及人數",
-    "點擊率(%)", "每次點擊成本", "每千次曝光成本", "轉換次數", "每次轉換成本",
-    "KOL", "時段", "直播播放量", "直播10秒播放", "2秒播放率(%)", "6秒播放率(%)", "完播率(%)",
+    "日期",        # 1  顯示
+    "廣告帳戶ID",  # 2  隱藏
+    "活動ID",      # 3  隱藏
+    "活動名稱",    # 4  隱藏
+    "廣告組ID",    # 5  隱藏
+    "廣告組名稱",  # 6  隱藏
+    "廣告ID",      # 7  顯示
+    "廣告名稱",    # 8  顯示
+    "KOL",         # 9  顯示 ← 移到此
+    "花費",        # 10
+    "曝光次數",    # 11
+    "點擊次數",    # 12
+    "觸及人數",    # 13
+    "點擊率(%)",   # 14
+    "每次點擊成本", # 15
+    "每千次曝光成本", # 16
+    "轉換次數",    # 17
+    "每次轉換成本", # 18
+    "時段",        # 19 ← 移到此
+    "直播播放量",  # 20
+    "直播10秒播放", # 21
+    "2秒播放率(%)", # 22
+    "6秒播放率(%)", # 23
+    "完播率(%)",   # 24
 ]
+# 寫入後要隱藏的欄索引（0-based）
+_HIDDEN_COL_INDICES = [1, 2, 3, 4, 5]  # 廣告帳戶ID～廣告組名稱
 
 
 def _session(sa_file: Path, readonly: bool = False) -> AuthorizedSession:
@@ -83,14 +106,27 @@ def import_csv(csv_path: Path, session: AuthorizedSession, sheet_id: str) -> lis
         cpa = round(spend / conv, 2) if conv > 0 else 0
 
         sheet_rows.append([
-            parse_date(name), ADVERTISER_ID, name, name, name, name,
-            r["广告名称"].strip(), r["广告名称"].strip(),
-            spend, impr, int(clicks), int(safe(r.get("直播去重播放量", 0))),
-            ctr, safe(r["平均点击成本（目标页面）"]), cpm, conv, cpa,
-            parse_kol(name), parse_slot(name),
-            int(safe(r.get("直播播放量", 0))), int(safe(r.get("直播播放 10 秒次数", 0))),
-            safe(r.get("2 秒播放率", 0)), safe(r.get("6 秒播放率", 0)),
-            safe(r.get("视频完播率", 0)),
+            parse_date(name),               # 1  日期
+            ADVERTISER_ID,                  # 2  廣告帳戶ID (隱藏)
+            name, name, name, name,         # 3-6 活動ID/名稱/廣告組ID/名稱 (隱藏)
+            r["广告名称"].strip(),           # 7  廣告ID
+            r["广告名称"].strip(),           # 8  廣告名稱
+            parse_kol(name),                # 9  KOL ← 第9欄
+            spend,                          # 10 花費
+            impr,                           # 11 曝光次數
+            int(clicks),                    # 12 點擊次數
+            int(safe(r.get("直播去重播放量", 0))),  # 13 觸及人數
+            ctr,                            # 14 點擊率(%)
+            safe(r["平均点击成本（目标页面）"]),  # 15 每次點擊成本
+            cpm,                            # 16 每千次曝光成本
+            conv,                           # 17 轉換次數
+            cpa,                            # 18 每次轉換成本
+            parse_slot(name),               # 19 時段 ← 第19欄
+            int(safe(r.get("直播播放量", 0))),        # 20
+            int(safe(r.get("直播播放 10 秒次数", 0))), # 21
+            safe(r.get("2 秒播放率", 0)),   # 22
+            safe(r.get("6 秒播放率", 0)),   # 23
+            safe(r.get("视频完播率", 0)),   # 24
         ])
 
     tab = os.environ.get("GOOGLE_SHEET_AD_TAB", "TikTok廣告成效")
@@ -99,6 +135,29 @@ def import_csv(csv_path: Path, session: AuthorizedSession, sheet_id: str) -> lis
         json={"values": sheet_rows}, timeout=30
     ).raise_for_status()
     print(f"✅ 匯入 {len(sheet_rows)-1} 筆到「{tab}」")
+
+    # 隱藏 ID 欄（廣告帳戶ID～廣告組名稱，第 2-6 欄，0-based index 1-5）
+    r_info = session.get(
+        f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}", timeout=10
+    ).json()
+    tab_sheet_id = next(
+        sh["properties"]["sheetId"] for sh in r_info.get("sheets", [])
+        if sh["properties"]["title"] == tab
+    )
+    hide_reqs = [
+        {"updateDimensionProperties": {
+            "range": {"sheetId": tab_sheet_id, "dimension": "COLUMNS",
+                      "startIndex": i, "endIndex": i + 1},
+            "properties": {"hiddenByUser": True},
+            "fields": "hiddenByUser",
+        }}
+        for i in _HIDDEN_COL_INDICES
+    ]
+    session.post(
+        f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}:batchUpdate",
+        json={"requests": hide_reqs}, timeout=15,
+    ).raise_for_status()
+    print("  └ 已隱藏 ID 欄（廣告帳戶ID～廣告組名稱）")
 
     # 讀回乾淨數據（排除壞列）
     r_back = session.get(
