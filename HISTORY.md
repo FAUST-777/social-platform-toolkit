@@ -255,6 +255,7 @@ OAuth 兩步驟設計的原因（安全考量）：
 | 2026-05 | 不走爬蟲方案 | Marketing API 是正路 |
 | 2026-05-13 | Vercel CLI 改用 token 登入 | 機器名稱含中文導致 CLI login 失敗 |
 | 2026-05-13 | hot-products 加 Playwright source | httpx 無法執行 JS，TikTok Shop 頁面全 JS 渲染 |
+| 2026-05-13 | 加入 Marketing AI 分析師（analyze_ads.py）| 廣告數據蒸餾成 Claude Opus 4.7 行銷建議，過審後直接可用 |
 
 ---
 
@@ -284,6 +285,7 @@ OAuth 兩步驟設計的原因（安全考量）：
 - [x] ~~寫 Python OAuth flow 拿 access_token~~ → `auth_advertiser.py` / `auth_account.py`
 - [x] ~~寫 Marketing API → Google Sheet 主程式~~ → `ad_reports.py`
 - [x] ~~寫 TikTok Accounts API → Google Sheet 直播數據~~ → `account_videos.py`
+- [x] ~~Marketing AI 分析師~~ → `analyze_ads.py`（Claude Opus 4.7，adaptive thinking）
 - [ ] 過審後實際執行授權流程、驗證 API 回傳格式
 - [ ] 設計「KOL 直播效益」儀表板
 - [ ] Looker Studio 報表
