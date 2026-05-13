@@ -5,7 +5,7 @@
 ---
 
 ## 📌 一句話總結
-從「**幫公司加入廣告帳戶**」開始，一路解決 Business Center 邀請卡住、Email 網域不一致、權限分層、App 申請被拒、OAuth callback URL 部署等問題，準備建立 TikTok 廣告 + 直播數據的雙路徑 Pipeline。
+從「**幫公司加入廣告帳戶**」開始，一路解決 Business Center 邀請卡住、Email 網域不一致、權限分層、App 申請被拒、OAuth callback URL 部署等問題，最終完成 Vercel 部署 + 完整 Marketing API / Accounts API Python 管線，等 TikTok App 過審後直接可跑。
 
 ---
 
@@ -210,6 +210,39 @@ OAuth 兩步驟設計的原因（安全考量）：
 
 ---
 
+## 🛤️ 開發階段（續）
+
+### 階段 8：等審核期間 — 補齊所有程式碼（2026-05-13）
+
+**問題背景**：TikTok Developer App 重申請中，無法取得 API access，但可以提前把管線全部寫好。
+
+**這次做了什麼**：
+
+1. **部署 OAuth Callback 到 Vercel**
+   - 難題：Vercel CLI 在電腦名稱含中文（「的」）時無法 `vercel login`，因為中文不是合法 HTTP header 值
+   - 解法：改用 Vercel Dashboard 建立 Access Token，搭配 `vercel --token` + `--scope` 部署
+   - 結果：`https://tiktok-oauth-callback-five.vercel.app` 上線，兩個 endpoint 驗證 OK
+
+2. **新建 `tiktok-marketing-api/` 完整管線**
+   - `auth_advertiser.py` — Marketing API OAuth 授權流程（auth_code → access_token）
+   - `auth_account.py` — Accounts API OAuth 授權流程（含 refresh token 刷新機制）
+   - `ad_reports.py` — 拉廣告報表 → Google Sheet（支援多廣告帳戶、分頁拉取、--days 參數）
+   - `account_videos.py` — 拉影片清單及互動數 → Google Sheet（支援 cursor 分頁）
+   - `main.py` — 一鍵執行兩條管線
+   - `_token_store.py` — token 存至 `.tokens/`（已加進 .gitignore）
+
+3. **hot-products pipeline 加入 Playwright source**
+   - 新增 `TikTokProfileSource` — 用 Playwright 爬公開 TikTok 頻道頁
+   - 不需登入，只抓公開的影片標題、觀看數
+   - 若 Playwright 未安裝，fail gracefully（印提示訊息，不中斷管線）
+   - 原 `tiktok_shop_search` 成功率低的根因：TikTok Shop 搜尋頁是 JS 渲染，httpx 拿不到資料
+
+**評估過但不做的方案**：
+- ~~爬 TikTok Shop 搜尋頁（httpx）~~ — JS 渲染，成功率 < 10%
+- ~~oEmbed source~~ — 只能拿已知影片的 meta，無法做商品探索
+
+---
+
 ## 💡 關鍵決策回顧
 
 | 時間 | 決策 | 為什麼 |
@@ -220,6 +253,8 @@ OAuth 兩步驟設計的原因（安全考量）：
 | 2026-05 | 改用 Vercel 部署 OAuth callback | 要 HTTPS + 永久 URL |
 | 2026-05 | 加勾 TikTok Accounts 權限 | 要拿直播自然觸及數據 |
 | 2026-05 | 不走爬蟲方案 | Marketing API 是正路 |
+| 2026-05-13 | Vercel CLI 改用 token 登入 | 機器名稱含中文導致 CLI login 失敗 |
+| 2026-05-13 | hot-products 加 Playwright source | httpx 無法執行 JS，TikTok Shop 頁面全 JS 渲染 |
 
 ---
 
@@ -244,12 +279,13 @@ OAuth 兩步驟設計的原因（安全考量）：
 
 ## 🚧 未完成 / 未來想做
 
-- [ ] 重新提交 TikTok App 申請（修 email 問題）
-- [ ] 部署 OAuth callback service 到 Vercel
-- [ ] 寫 Python OAuth flow 拿 access_token
-- [ ] 寫 Marketing API → Google Sheet 主程式
-- [ ] 寫 TikTok Accounts API → Google Sheet 直播數據
+- [ ] 重新提交 TikTok App 申請（修 email 問題）— **等審核中**
+- [x] ~~部署 OAuth callback service 到 Vercel~~ → `https://tiktok-oauth-callback-five.vercel.app`
+- [x] ~~寫 Python OAuth flow 拿 access_token~~ → `auth_advertiser.py` / `auth_account.py`
+- [x] ~~寫 Marketing API → Google Sheet 主程式~~ → `ad_reports.py`
+- [x] ~~寫 TikTok Accounts API → Google Sheet 直播數據~~ → `account_videos.py`
+- [ ] 過審後實際執行授權流程、驗證 API 回傳格式
 - [ ] 設計「KOL 直播效益」儀表板
 - [ ] Looker Studio 報表
-- [ ] cron 排程
-- [ ] Scrapling 公開頁實驗（補充自然觸及數據）
+- [ ] cron 排程（GitHub Actions 或 n8n）
+- [ ] hot-products Playwright source 實測成功率
