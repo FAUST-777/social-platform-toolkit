@@ -241,6 +241,14 @@ OAuth 兩步驟設計的原因（安全考量）：
 - ~~爬 TikTok Shop 搜尋頁（httpx）~~ — JS 渲染，成功率 < 10%
 - ~~oEmbed source~~ — 只能拿已知影片的 meta，無法做商品探索
 
+4. **Marketing AI 分析師（2026-05-13）**
+   - `analyze_ads.py` — 讀 Sheet → 彙整 → Claude Opus 4.7 串流分析 → 輸出報告
+   - `import_ads_csv.py` — TikTok 後台手動匯出 CSV → Google Sheet + 成效彙整 tab
+   - 踩坑：httplib2 在 macOS 連 Google OAuth endpoint 會 timeout，改用 `google.auth.transport.requests.AuthorizedSession`
+   - 踩坑：17LIVE 企業 Google Workspace 不允許分享給外部 service account，改用個人 Gmail 建 Sheet
+   - 首次真實數據分析（28 筆廣告組，5 KOL：妍妍/Emma/KiKi/沐沐/Julian）
+   - AI 最優先建議：TikTok Pixel 未設置，全帳號轉換數 = 0，需先修復
+
 ---
 
 ## 💡 關鍵決策回顧
@@ -255,6 +263,9 @@ OAuth 兩步驟設計的原因（安全考量）：
 | 2026-05 | 不走爬蟲方案 | Marketing API 是正路 |
 | 2026-05-13 | Vercel CLI 改用 token 登入 | 機器名稱含中文導致 CLI login 失敗 |
 | 2026-05-13 | hot-products 加 Playwright source | httpx 無法執行 JS，TikTok Shop 頁面全 JS 渲染 |
+| 2026-05-13 | Google Sheets auth 改 requests transport | macOS 上 httplib2 連 Google OAuth endpoint timeout |
+| 2026-05-13 | 企業 Google Workspace 不能共用 service account | 17LIVE IT 政策封鎖外部網域，改用個人 Gmail Sheet |
+| 2026-05-13 | 首次用真實數據跑 AI 分析 | 確認 Pixel 未設置為最優先問題，妍妍晚場 CTR 最高 |
 | 2026-05-13 | 加入 Marketing AI 分析師（analyze_ads.py）| 廣告數據蒸餾成 Claude Opus 4.7 行銷建議，過審後直接可用 |
 
 ---
@@ -286,6 +297,7 @@ OAuth 兩步驟設計的原因（安全考量）：
 - [x] ~~寫 Marketing API → Google Sheet 主程式~~ → `ad_reports.py`
 - [x] ~~寫 TikTok Accounts API → Google Sheet 直播數據~~ → `account_videos.py`
 - [x] ~~Marketing AI 分析師~~ → `analyze_ads.py`（Claude Opus 4.7，adaptive thinking）
+- [x] ~~手動 CSV 匯入工具~~ → `import_ads_csv.py`（TikTok 後台匯出 CSV → Google Sheet + 成效彙整 tab）
 - [ ] 過審後實際執行授權流程、驗證 API 回傳格式
 - [ ] 設計「KOL 直播效益」儀表板
 - [ ] Looker Studio 報表
