@@ -1,4 +1,4 @@
-# Jushou TikTok OAuth Callback Service
+# OrderPally TikTok OAuth Callback Service
 
 Vercel-hosted OAuth callback endpoints for TikTok for Business API integrations.
 
@@ -26,16 +26,16 @@ Vercel-hosted OAuth callback endpoints for TikTok for Business API integrations.
 ### Step 3: 拿到正式 URL
 部署成功後 Vercel 會給你一個 URL，例如：
 ```
-https://jushou-tiktok-oauth.vercel.app
+https://orderpally-tiktok-oauth.vercel.app
 ```
 
 你的兩個 callback endpoint 就是：
 ```
 Advertiser Redirect URL:
-https://jushou-tiktok-oauth.vercel.app/api/advertiser-callback
+https://orderpally-tiktok-oauth.vercel.app/api/advertiser-callback
 
 TikTok Account Holder Redirect URL:
-https://jushou-tiktok-oauth.vercel.app/api/account-callback
+https://orderpally-tiktok-oauth.vercel.app/api/account-callback
 ```
 
 ### Step 4: 填回 TikTok App 申請表

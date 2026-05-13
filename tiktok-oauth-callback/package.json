@@ -1,5 +1,5 @@
 {
-  "name": "jushou-tiktok-oauth",
+  "name": "orderpally-tiktok-oauth",
   "version": "1.0.0",
   "private": true,
   "description": "OAuth callback service for TikTok for Business API integrations.",

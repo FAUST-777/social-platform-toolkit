@@ -29,7 +29,7 @@
 
 ### 📋 TikTok App 申請 - 最終勾選清單
 
-**主力 App 名稱**：`Jushou Ads Reporting`（或類似）
+**主力 App 名稱**：`OrderPally Ads Reporting`（或類似）
 
 ✅ 必勾權限：
 - `Ad Account Management → Read Ad Account Information`

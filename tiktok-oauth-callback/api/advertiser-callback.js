@@ -47,7 +47,7 @@ function renderHTML({ status, title, message, detail, code, state, type }) {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${title} | Jushou TikTok OAuth</title>
+  <title>${title} | OrderPally TikTok OAuth</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -169,7 +169,7 @@ function renderHTML({ status, title, message, detail, code, state, type }) {
     `}
 
     <div class="footer">
-      Jushou E-commerce · TikTok OAuth Callback · Powered by Vercel
+      OrderPally (17LIVE Group) · TikTok OAuth Callback · Powered by Vercel
     </div>
   </div>
 
