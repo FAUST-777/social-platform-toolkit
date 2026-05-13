@@ -1,0 +1,26 @@
+[project]
+name = "tiktok-threads-hot-products"
+version = "0.1.0"
+description = "Scheduled pipeline for collecting social commerce product signals and writing them to Google Sheets."
+requires-python = ">=3.11"
+dependencies = [
+  "beautifulsoup4>=4.12.3",
+  "google-api-python-client>=2.130.0",
+  "google-auth>=2.29.0",
+  "httpx>=0.27.0",
+  "pydantic>=2.7.0",
+  "pydantic-settings>=2.2.1",
+  "python-dotenv>=1.0.1",
+  "PyYAML>=6.0.1",
+  "tenacity>=8.2.3",
+]
+
+[project.scripts]
+hot-products = "hot_products.cli:main"
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

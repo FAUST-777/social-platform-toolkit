@@ -1,0 +1,25 @@
+markets:
+  - US
+  - TW
+
+keywords:
+  - live shopping
+  - tiktok made me buy it
+  - skincare
+  - kitchen gadget
+  - shapewear
+
+sources:
+  tiktok_shop_search:
+    enabled: true
+    # Public pages change often. Prefer TikTok Shop Partner/Open API or a licensed data provider
+    # for production. These URLs are parsed best-effort when present.
+    urls:
+      - "https://shop.tiktok.com/us/search?q=live%20shopping"
+      - "https://shop.tiktok.com/us/search?q=tiktok%20made%20me%20buy%20it"
+
+  custom_json:
+    enabled: false
+    # Use this for Apify, internal scrapers, or licensed social-commerce data vendors.
+    # The endpoint can be configured via CUSTOM_JSON_ENDPOINT in .env.
+    platform: "threads"
