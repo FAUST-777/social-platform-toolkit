@@ -18,9 +18,10 @@ from datetime import date, timedelta
 from pathlib import Path
 
 import anthropic
+import requests as req_lib
 from dotenv import load_dotenv
+from google.auth.transport.requests import AuthorizedSession
 from google.oauth2.service_account import Credentials
-from googleapiclient.discovery import build
 
 MARKETING_EXPERT_SYSTEM = """\
 你是 OrderPally（17LIVE 集團旗下電商品牌）的資深 TikTok 廣告成效分析師。
@@ -63,19 +64,25 @@ MARKETING_EXPERT_SYSTEM = """\
 """
 
 
+def _authed_session(sa_file: Path, readonly: bool = True) -> AuthorizedSession:
+    scope = (
+        "https://www.googleapis.com/auth/spreadsheets.readonly"
+        if readonly
+        else "https://www.googleapis.com/auth/spreadsheets"
+    )
+    creds = Credentials.from_service_account_file(sa_file, scopes=[scope])
+    return AuthorizedSession(creds)
+
+
 def _read_sheet(sa_file: Path, sheet_id: str, tab: str) -> list[list[str]]:
-    creds = Credentials.from_service_account_file(
-        sa_file,
-        scopes=["https://www.googleapis.com/auth/spreadsheets.readonly"],
+    session = _authed_session(sa_file, readonly=True)
+    url = (
+        f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}"
+        f"/values/{tab}!A:Q"
     )
-    svc = build("sheets", "v4", credentials=creds)
-    result = (
-        svc.spreadsheets()
-        .values()
-        .get(spreadsheetId=sheet_id, range=f"{tab}!A:Q")
-        .execute()
-    )
-    return result.get("values", [])
+    resp = session.get(url, timeout=30)
+    resp.raise_for_status()
+    return resp.json().get("values", [])
 
 
 def load_ad_data(sa_file: Path, sheet_id: str, tab: str, days: int) -> list[dict]:
@@ -180,19 +187,19 @@ def run_analysis(data: dict, days: int) -> str:
 def save_to_sheet(
     sa_file: Path, sheet_id: str, tab: str, analysis: str, days: int
 ) -> None:
-    creds = Credentials.from_service_account_file(
-        sa_file,
-        scopes=["https://www.googleapis.com/auth/spreadsheets"],
-    )
-    svc = build("sheets", "v4", credentials=creds)
+    session = _authed_session(sa_file, readonly=False)
     header = f"=== {date.today().isoformat()} 分析（最近 {days} 天）==="
-    svc.spreadsheets().values().append(
-        spreadsheetId=sheet_id,
-        range=f"{tab}!A:A",
-        valueInputOption="RAW",
-        insertDataOption="INSERT_ROWS",
-        body={"values": [[header], [analysis], [""]],},
-    ).execute()
+    url = (
+        f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}"
+        f"/values/{tab}!A:A:append"
+        f"?valueInputOption=RAW&insertDataOption=INSERT_ROWS"
+    )
+    resp = session.post(
+        url,
+        json={"values": [[header], [analysis], [""]]},
+        timeout=30,
+    )
+    resp.raise_for_status()
     print(f"\n✅ 分析報告已寫入 Google Sheet「{tab}」")
 
 
