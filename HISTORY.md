@@ -9,21 +9,59 @@
 
 ---
 
-## 🎯 整體需求
+## 🏗️ 專案：OP實驗型-直播帶貨
 
-來自 [TikTok BC 與 App 申請](e0734753-86d3-487e-90c3-dccbad8beb1c)（590 個 TikTok 關鍵字命中）
+**所屬品牌：** OrderPally（17LIVE 集團旗下電商品牌）
+
+### 業務架構
+
+```
+商品中間商（供貨）
+    ↓ 叫貨給 KOL
+KOL（KiKi / 妍妍 / Emma / 沐沐 / Julian）
+    ↓ 借用公司帳號直播或拍影片帶貨
+TikTok 頻道：@17shoptaiwan
+    ↓
+TikTok 廣告投放（OrderPally 付費推廣各場直播）
+    ↓
+觀眾點擊進入銷售頁
+    ↓
+mokibuy 電商平台：https://mokibuy.com/17shoptaiwan/event/store/cartList
+    ↓
+KOL 自行處理訂單 + 出貨
+```
+
+### 核心帳號
+
+| 項目 | 資訊 |
+|---|---|
+| TikTok 頻道 | https://www.tiktok.com/@17shoptaiwan |
+| TikTok 廣告帳號 ID | [REDACTED-ADVERTISER-ID] |
+| 廣告帳號名稱 | 舉手電商股份有限公司_直播_競價_直客_永恆跨境數位2 |
+| 電商平台 | https://mokibuy.com/17shoptaiwan/event/store/cartList |
+| TK大表（Google Sheet）| https://docs.google.com/spreadsheets/d/[REDACTED-SHEET-ID] |
+| TikTok Pixel ID | D8297JRC77U1Q23AA1DG（待安裝到 mokibuy）|
+
+### 廣告場次命名規則
+
+`YYYYMMDD [時段]-[KOL名]`，例：`20260507 晚場-妍妍`
+時段：早場 / 中場 / 午場 / 晚場
+
+---
+
+## 🎯 技術需求
 
 **業務情境**：
-- 公司有 **1 個 TikTok 頻道**（@舉手電商 或類似）
-- 找 **多位 KOL 進來在公司頻道開直播**（KOL 不用個人帳號）
-- 商品買賣導到**其他電商平台**（非 TikTok Shop）
-- 要追蹤：觀看人數、停留時間、留言、分享、轉換等
+- 公司有 TikTok 頻道 **@17shoptaiwan**
+- 多位 KOL 借用公司頻道定期直播（KOL 不用個人帳號）
+- 商品透過**商品中間商**供貨，透過 **mokibuy** 電商平台銷售
+- KOL 自行處理訂單與出貨
 
 **技術需求**：
 1. 拉廣告投放成效（Marketing API）
 2. 拉直播觀眾數據（TikTok Accounts API）
-3. 寫進 Google Sheet 報表
-4. 後續做 Looker Studio 視覺化
+3. 寫進 TK大表（Google Sheet）做 MKT 分析
+4. AI MKT 分析師自動產出優化建議
 
 ---
 
