@@ -266,18 +266,30 @@ def save_to_sheet(
 ) -> None:
     session = _authed_session(sa_file, readonly=False)
     header = f"=== {date.today().isoformat()} 分析（最近 {days} 天）==="
-    url = (
-        f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}"
-        f"/values/{tab}!A:A:append"
-        f"?valueInputOption=RAW&insertDataOption=INSERT_ROWS"
+    # 先讀現有內容，找到最後一列後面接著寫
+    r = session.get(
+        f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}/values/{tab}!A:A",
+        timeout=10,
     )
-    resp = session.post(
-        url,
-        json={"values": [[header], [analysis], [""]]},
+    existing = r.json().get("values", [])
+    next_row = len(existing) + 1
+
+    # 把分析報告拆成每行最多 45,000 字（Google Sheets 單格上限 50,000）
+    lines = analysis.split("\n")
+    rows = [[header]]
+    for line in lines:
+        rows.append([line])
+    rows.append([""])
+
+    end_row = next_row + len(rows) - 1
+    resp = session.put(
+        f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}"
+        f"/values/{tab}!A{next_row}:A{end_row}?valueInputOption=RAW",
+        json={"values": rows},
         timeout=30,
     )
     resp.raise_for_status()
-    print(f"\n✅ 分析報告已寫入 Google Sheet「{tab}」")
+    print(f"\n✅ 分析報告已寫入 Google Sheet「{tab}」（{len(rows)} 列，從第 {next_row} 列起）")
 
 
 def main() -> None:

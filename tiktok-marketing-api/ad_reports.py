@@ -72,8 +72,9 @@ def fetch_report(
     params = {
         "advertiser_id": advertiser_id,
         "report_type": "BASIC",
-        "dimensions": '["stat_time_day","campaign_id","adgroup_id","ad_id"]',
-        "metrics": f'[{",".join(f\'"{m}"\' for m in METRICS)}]',
+        "data_level": "AUCTION_AD",
+        "dimensions": '["stat_time_day","ad_id"]',
+        "metrics": "[" + ",".join('"' + m + '"' for m in METRICS) + "]",
         "start_date": start_date,
         "end_date": end_date,
         "page_size": 1000,
