@@ -1,0 +1,51 @@
+name: Weekly TikTok Ad Report
+
+on:
+  schedule:
+    # 每週日 00:00 台灣時間（UTC+8）= 週六 16:00 UTC
+    - cron: "0 16 * * 6"
+  workflow_dispatch:  # 手動觸發
+
+jobs:
+  pull-and-export:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install httpx python-dotenv anthropic
+
+      - name: Write token file
+        env:
+          TIKTOK_ACCESS_TOKEN: ${{ secrets.TIKTOK_ACCESS_TOKEN }}
+          TIKTOK_ADVERTISER_IDS: ${{ secrets.TIKTOK_ADVERTISER_IDS }}
+        run: |
+          mkdir -p tiktok-marketing-api/.tokens
+          echo "{\"access_token\": \"$TIKTOK_ACCESS_TOKEN\", \"advertiser_ids\": [\"$TIKTOK_ADVERTISER_IDS\"]}" \
+            > tiktok-marketing-api/.tokens/advertiser.json
+
+      - name: Pull last 7 days ad data → CSV
+        env:
+          TIKTOK_ACCESS_TOKEN: ${{ secrets.TIKTOK_ACCESS_TOKEN }}
+          TIKTOK_ADVERTISER_IDS: ${{ secrets.TIKTOK_ADVERTISER_IDS }}
+        run: |
+          cd tiktok-marketing-api
+          python ad_reports.py --days 7 --csv-only
+
+      - name: Commit CSV to repo
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/
+          git diff --staged --quiet || git commit -m "chore: weekly TikTok ad report $(date +'%Y-%m-%d')"
+          git push

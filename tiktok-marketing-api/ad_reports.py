@@ -163,16 +163,38 @@ def write_to_sheet(
         ).execute()
 
 
+def write_to_csv(rows: list[list], days: int) -> Path:
+    import csv as csv_module
+    reports_dir = Path(__file__).parent.parent / "reports"
+    reports_dir.mkdir(exist_ok=True)
+    today = date.today().strftime("%Y-%m-%d")
+    csv_path = reports_dir / f"tiktok_ads_{today}_last{days}days.csv"
+    with open(csv_path, "w", newline="", encoding="utf-8-sig") as f:
+        writer = csv_module.writer(f)
+        writer.writerow(SHEET_HEADERS)
+        writer.writerows(rows)
+    return csv_path
+
+
 def main() -> None:
     load_dotenv()
     parser = argparse.ArgumentParser()
     parser.add_argument("--days", type=int, default=1, help="拉最近 N 天（預設 1 = 昨天）")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--csv", action="store_true", help="同時輸出 CSV 到 reports/ 資料夾")
+    parser.add_argument("--csv-only", action="store_true", help="只輸出 CSV，不寫 Google Sheet")
     args = parser.parse_args()
 
-    token_data = _token_store.load("advertiser")
-    access_token = token_data["access_token"]
-    advertiser_ids: list[str] = token_data.get("advertiser_ids", [])
+    # 支援從環境變數直接傳入 token（GitHub Actions 用）
+    access_token = os.environ.get("TIKTOK_ACCESS_TOKEN")
+    advertiser_ids_env = os.environ.get("TIKTOK_ADVERTISER_IDS")
+
+    if not access_token:
+        token_data = _token_store.load("advertiser")
+        access_token = token_data["access_token"]
+        advertiser_ids: list[str] = token_data.get("advertiser_ids", [])
+    else:
+        advertiser_ids = advertiser_ids_env.split(",") if advertiser_ids_env else []
 
     if not advertiser_ids:
         raise RuntimeError("advertiser_ids 為空，請確認授權帳號有廣告帳戶。")
@@ -180,10 +202,6 @@ def main() -> None:
     today = date.today()
     start_date = (today - timedelta(days=args.days)).strftime("%Y-%m-%d")
     end_date = (today - timedelta(days=1)).strftime("%Y-%m-%d")
-
-    sheet_id = os.environ["GOOGLE_SHEET_ID"]
-    tab = os.environ.get("GOOGLE_SHEET_AD_TAB", "TikTok廣告成效")
-    sa_file = Path(os.environ["GOOGLE_SERVICE_ACCOUNT_FILE"])
 
     all_rows: list[list] = []
 
@@ -199,8 +217,17 @@ def main() -> None:
         print(json.dumps(all_rows, ensure_ascii=False, indent=2))
         return
 
-    write_to_sheet(sa_file, sheet_id, tab, all_rows)
-    print(f"\n已寫入 {len(all_rows)} 筆到 Google Sheet「{tab}」")
+    if args.csv or args.csv_only:
+        csv_path = write_to_csv(all_rows, args.days)
+        print(f"已輸出 CSV → {csv_path}")
+
+    if not args.csv_only:
+        load_dotenv()
+        sheet_id = os.environ["GOOGLE_SHEET_ID"]
+        tab = os.environ.get("GOOGLE_SHEET_AD_TAB", "TikTok廣告成效")
+        sa_file = Path(os.environ["GOOGLE_SERVICE_ACCOUNT_FILE"])
+        write_to_sheet(sa_file, sheet_id, tab, all_rows)
+        print(f"\n已寫入 {len(all_rows)} 筆到 Google Sheet「{tab}」")
 
 
 if __name__ == "__main__":

@@ -27,6 +27,7 @@ build/
 # ===== Sensitive Data =====
 *.csv
 !sample_*.csv
+!reports/*.csv   # 週報 CSV 要 commit
 data/
 output/
 logs/
