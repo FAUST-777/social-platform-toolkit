@@ -305,10 +305,14 @@ OAuth 兩步驟設計的原因（安全考量）：
 | 2026-05-13 | 企業 Google Workspace 不能共用 service account | 17LIVE IT 政策封鎖外部網域，改用個人 Gmail Sheet |
 | 2026-05-13 | 首次用真實數據跑 AI 分析 | 確認 Pixel 未設置為最優先問題，妍妍晚場 CTR 最高 |
 | 2026-05-13 | 加入 Marketing AI 分析師（analyze_ads.py）| 廣告數據蒸餾成 Claude Opus 4.7 行銷建議，過審後直接可用 |
+| 2026-05-18 | TikTok App 通過審核 | App ID: [REDACTED-APP-ID]，App Name: Ads Reporting GSheet |
+| 2026-05-19 | Marketing API 正式接通 | 授權成功，拉到 205 筆真實廣告數據，寫進 TK大表 |
+| 2026-05-19 | MKT AI 分析正式跑真實數據 | CTR 2.64%、CPA $0.3 業界 Top 5%；發現數據歸因問題 |
+| 2026-05-19 | Display API 影片數據放棄 | 資安政策：Willie 無法持有 @17shoptaiwan 主帳號，此功能 pending |
 
 ---
 
-## 🧯 踩坑 Top 8（給未來的你避免重複）
+## 🧯 踩坑 Top 11（給未來的你避免重複）
 
 1. **TikTok BC 邀請 email 不一致 → 永遠 Pending** — 接受邀請前確認登入的是同一個 email
 2. **BC Admin ≠ Ad Account Admin** — 兩層權限獨立，要兩邊都設
@@ -318,6 +322,9 @@ OAuth 兩步驟設計的原因（安全考量）：
 6. **TikTok 後台網頁直接爬會封號** — 用 Marketing API 才是正路
 7. **OAuth callback URL 之後可改** — TikTok 後台允許修改，先填 placeholder 也行
 8. **Pixel 安裝不需要 API 權限** — 只是貼 JS code 在網站，不需要勾 Pixel Management
+9. **Marketing API 需要 `data_level` 參數** — 忘填會回 40002 錯誤，用 `AUCTION_AD`
+10. **Display API 授權對象 ≠ BC 成員身份** — BC 成員帳號只能拉自己帳號的影片，不能代拉主帳號
+11. **Google Sheets tab 名稱要完全一致** — 改了 tab 名稱記得同步更新 `.env` 的 ANALYSIS_TAB 設定
 
 ---
 
