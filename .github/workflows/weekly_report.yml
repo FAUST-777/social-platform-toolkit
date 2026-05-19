@@ -23,24 +23,30 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install httpx python-dotenv anthropic
+          pip install httpx python-dotenv anthropic \
+            google-api-python-client google-auth
 
-      - name: Write token file
+      - name: Write token and credential files
         env:
           TIKTOK_ACCESS_TOKEN: ${{ secrets.TIKTOK_ACCESS_TOKEN }}
           TIKTOK_ADVERTISER_IDS: ${{ secrets.TIKTOK_ADVERTISER_IDS }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
         run: |
           mkdir -p tiktok-marketing-api/.tokens
           echo "{\"access_token\": \"$TIKTOK_ACCESS_TOKEN\", \"advertiser_ids\": [\"$TIKTOK_ADVERTISER_IDS\"]}" \
             > tiktok-marketing-api/.tokens/advertiser.json
+          echo "$GOOGLE_SERVICE_ACCOUNT_JSON" > /tmp/service_account.json
 
-      - name: Pull last 7 days ad data → CSV
+      - name: Pull last 7 days ad data → CSV + Google Sheet
         env:
           TIKTOK_ACCESS_TOKEN: ${{ secrets.TIKTOK_ACCESS_TOKEN }}
           TIKTOK_ADVERTISER_IDS: ${{ secrets.TIKTOK_ADVERTISER_IDS }}
+          GOOGLE_SERVICE_ACCOUNT_FILE: /tmp/service_account.json
+          GOOGLE_SHEET_ID: ${{ secrets.GOOGLE_SHEET_ID }}
+          GOOGLE_SHEET_AD_TAB: TikTok廣告成效
         run: |
           cd tiktok-marketing-api
-          python ad_reports.py --days 7 --csv-only
+          python ad_reports.py --days 7 --csv
 
       - name: Commit CSV to repo
         run: |
