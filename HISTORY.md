@@ -334,17 +334,31 @@ OAuth 兩步驟設計的原因（安全考量）：
 
 ---
 
-## 🚧 未完成 / 未來想做
+## 🚧 進度總覽（2026-05-19 更新）
 
-- [ ] 重新提交 TikTok App 申請（修 email 問題）— **等審核中**
-- [x] ~~部署 OAuth callback service 到 Vercel~~ → `https://tiktok-oauth-callback-five.vercel.app`
-- [x] ~~寫 Python OAuth flow 拿 access_token~~ → `auth_advertiser.py` / `auth_account.py`
-- [x] ~~寫 Marketing API → Google Sheet 主程式~~ → `ad_reports.py`
-- [x] ~~寫 TikTok Accounts API → Google Sheet 直播數據~~ → `account_videos.py`
-- [x] ~~Marketing AI 分析師~~ → `analyze_ads.py`（Claude Opus 4.7，adaptive thinking）
-- [x] ~~手動 CSV 匯入工具~~ → `import_ads_csv.py`（TikTok 後台匯出 CSV → Google Sheet + 成效彙整 tab）
-- [ ] 過審後實際執行授權流程、驗證 API 回傳格式
-- [ ] 設計「KOL 直播效益」儀表板
-- [ ] Looker Studio 報表
-- [ ] cron 排程（GitHub Actions 或 n8n）
+### ✅ 已完成
+
+- [x] TikTok App 申請通過（App ID: [REDACTED-APP-ID]，2026-05-18）
+- [x] 部署 OAuth Callback 到 Vercel → `https://tiktok-oauth-callback-five.vercel.app`
+- [x] Marketing API 授權並正式接通 → `auth_advertiser.py` + 205 筆真實數據
+- [x] 廣告報表自動拉取 → `ad_reports.py`（每日數據寫進 TK大表）
+- [x] MKT AI 分析師正式上線 → `analyze_ads.py`（Claude Opus 4.7，含學術研究知識庫）
+- [x] 手動 CSV 匯入工具 → `import_ads_csv.py`
+- [x] TK大表建立（成效彙整 / 廣告成效 / AI分析 / 影片數據 四個 tab）
+- [x] MKT system prompt 升級（整合 2024-2026 TikTok 學術文獻 + 業界 benchmark）
+
+### ⏳ 進行中 / 待辦
+
+- [ ] **TikTok Pixel 安裝**：Pixel ID `D8297JRC77U1Q23AA1DG` 待安裝到 mokibuy，需向同事取得 mokibuy 帳密
+- [ ] **廣告數據歸因修正**：205 筆數據中 24 個 KOL 活動花費歸戶異常（CTR 破萬%），需釐清 API 回傳層級問題
+- [ ] **KOL 效益儀表板**：待數據歸因修正後，用 Looker Studio 建立 KOL × 時段視覺化
+
+### ⛔ 永久 Pending（資安限制）
+
+- [x] ~~@17shoptaiwan 影片數據（Display API）~~：資安政策，Willie 無法持有主帳號，此功能停止
+
+### 🔮 未來想做
+
+- [ ] cron 排程自動化（GitHub Actions 或 n8n，每日自動跑 `main.py --analyze`）
+- [ ] Looker Studio 報表連接 TK大表
 - [ ] hot-products Playwright source 實測成功率
