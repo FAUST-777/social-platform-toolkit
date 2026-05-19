@@ -17,8 +17,6 @@ from pathlib import Path
 
 import httpx
 from dotenv import load_dotenv
-from google.oauth2.service_account import Credentials
-from googleapiclient.discovery import build
 
 import _token_store
 
@@ -136,6 +134,8 @@ def write_to_sheet(
     tab: str,
     rows: list[list],
 ) -> None:
+    from google.oauth2.service_account import Credentials
+    from googleapiclient.discovery import build
     creds = Credentials.from_service_account_file(
         service_account_file,
         scopes=["https://www.googleapis.com/auth/spreadsheets"],
