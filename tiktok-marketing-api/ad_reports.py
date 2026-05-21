@@ -210,21 +210,58 @@ def write_to_sheet(
     s = _sheet_session(service_account_file)
     tab_enc = urllib.parse.quote(tab, safe="")
 
+    # 讀取現有數據，建立去重 key（廣告ID + 日期）
+    r_existing = s.get(
+        f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}/values/{tab_enc}!A:X",
+        timeout=15,
+    )
+    existing_vals = r_existing.json().get("values", [])
+    existing_keys: set[str] = set()
+    if len(existing_vals) > 1:
+        hdrs = existing_vals[0]
+        try:
+            date_idx = hdrs.index("日期")
+            ad_id_idx = hdrs.index("廣告ID")
+            for row in existing_vals[1:]:
+                if len(row) > max(date_idx, ad_id_idx):
+                    existing_keys.add(f"{row[date_idx]}|{row[ad_id_idx]}")
+        except ValueError:
+            pass  # header 不符時不做去重
+
+    # 過濾掉已存在的列（去重）
+    SHEET_HEADER_LIST = SHEET_HEADERS
+    try:
+        date_col = SHEET_HEADER_LIST.index("日期")
+        adid_col = SHEET_HEADER_LIST.index("廣告ID")
+    except ValueError:
+        date_col, adid_col = 0, 6
+
+    new_rows = []
+    dup_count = 0
+    for row in rows:
+        key = f"{row[date_col]}|{row[adid_col]}"
+        if key in existing_keys:
+            dup_count += 1
+        else:
+            new_rows.append(row)
+            existing_keys.add(key)
+
+    if dup_count > 0:
+        print(f"  ⚠️  去重：跳過 {dup_count} 筆已存在的紀錄，新增 {len(new_rows)} 筆")
+
     # 確認 header（24 欄）
-    r = s.get(f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}/values/{tab_enc}!A1:X1", timeout=15)
-    existing = r.json().get("values", [[]])
-    if not existing or existing[0] != SHEET_HEADERS:
+    if not existing_vals or existing_vals[0] != SHEET_HEADERS:
         s.put(
             f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}"
             f"/values/{tab_enc}!A1:X1?valueInputOption=RAW",
             json={"values": [SHEET_HEADERS]}, timeout=15,
         ).raise_for_status()
 
-    if rows:
+    if new_rows:
         s.post(
             f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}"
-            f"/values/{tab_enc}!A:Q:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",
-            json={"values": rows},
+            f"/values/{tab_enc}!A:X:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",
+            json={"values": new_rows},
             timeout=30,
         ).raise_for_status()
 
