@@ -128,39 +128,74 @@ def to_sheet_row(advertiser_id: str, item: dict) -> list:
     ]
 
 
+def _sheet_session(service_account_file: Path):
+    from google.auth.transport.requests import AuthorizedSession
+    from google.oauth2.service_account import Credentials
+    creds = Credentials.from_service_account_file(
+        service_account_file,
+        scopes=["https://www.googleapis.com/auth/spreadsheets"],
+    )
+    return AuthorizedSession(creds)
+
+
+def update_cover_sheet(
+    service_account_file: Path,
+    sheet_id: str,
+    start_date: str,
+    end_date: str,
+    row_count: int,
+) -> None:
+    from datetime import datetime
+    import zoneinfo
+    now_tw = datetime.now(zoneinfo.ZoneInfo("Asia/Taipei")).strftime("%Y-%m-%d %H:%M:%S")
+    s = _sheet_session(service_account_file)
+    status_rows = [
+        ["📊 OP實驗型-直播帶貨 TikTok 廣告數據"],
+        [""],
+        ["最後更新時間（台灣）", now_tw],
+        ["資料區間", f"{start_date}  ~  {end_date}"],
+        ["資料筆數", row_count],
+        ["廣告帳戶 ID", "[REDACTED-ADVERTISER-ID]"],
+        ["資料來源", "TikTok Marketing API"],
+        [""],
+        ["TikTok 頻道", "https://www.tiktok.com/@17shoptaiwan"],
+        ["電商平台", "https://mokibuy.com/17shoptaiwan/event/store/cartList"],
+    ]
+    s.put(
+        f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}"
+        f"/values/safe cover!A1:B10?valueInputOption=RAW",
+        json={"values": status_rows}, timeout=30,
+    ).raise_for_status()
+    print(f"✅ safe cover 更新完畢（{now_tw}）")
+
+
 def write_to_sheet(
     service_account_file: Path,
     sheet_id: str,
     tab: str,
     rows: list[list],
 ) -> None:
-    from google.oauth2.service_account import Credentials
-    from googleapiclient.discovery import build
-    creds = Credentials.from_service_account_file(
-        service_account_file,
-        scopes=["https://www.googleapis.com/auth/spreadsheets"],
-    )
-    service = build("sheets", "v4", credentials=creds)
-    sheets = service.spreadsheets()
+    import urllib.parse
+    s = _sheet_session(service_account_file)
+    tab_enc = urllib.parse.quote(tab, safe="")
 
-    range_check = f"{tab}!A1:Q1"
-    existing = sheets.values().get(spreadsheetId=sheet_id, range=range_check).execute()
-    if not existing.get("values") or existing["values"][0] != SHEET_HEADERS:
-        sheets.values().update(
-            spreadsheetId=sheet_id,
-            range=range_check,
-            valueInputOption="RAW",
-            body={"values": [SHEET_HEADERS]},
-        ).execute()
+    # 確認 header
+    r = s.get(f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}/values/{tab_enc}!A1:Q1", timeout=15)
+    existing = r.json().get("values", [[]])
+    if not existing or existing[0] != SHEET_HEADERS:
+        s.put(
+            f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}"
+            f"/values/{tab_enc}!A1:Q1?valueInputOption=RAW",
+            json={"values": [SHEET_HEADERS]}, timeout=15,
+        ).raise_for_status()
 
     if rows:
-        sheets.values().append(
-            spreadsheetId=sheet_id,
-            range=f"{tab}!A:Q",
-            valueInputOption="RAW",
-            insertDataOption="INSERT_ROWS",
-            body={"values": rows},
-        ).execute()
+        s.post(
+            f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}"
+            f"/values/{tab_enc}!A:Q:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",
+            json={"values": rows},
+            timeout=30,
+        ).raise_for_status()
 
 
 def write_to_csv(rows: list[list], days: int) -> Path:
@@ -200,17 +235,31 @@ def main() -> None:
         raise RuntimeError("advertiser_ids 為空，請確認授權帳號有廣告帳戶。")
 
     today = date.today()
-    start_date = (today - timedelta(days=args.days)).strftime("%Y-%m-%d")
-    end_date = (today - timedelta(days=1)).strftime("%Y-%m-%d")
+    start_dt = today - timedelta(days=args.days)
+    end_dt = today - timedelta(days=1)
+    start_date = start_dt.strftime("%Y-%m-%d")
+    end_date = end_dt.strftime("%Y-%m-%d")
+
+    # TikTok API 單次最多 30 天，超過自動拆批
+    MAX_DAYS = 30
+    def date_chunks(start: date, end: date):
+        cur = start
+        while cur <= end:
+            chunk_end = min(cur + timedelta(days=MAX_DAYS - 1), end)
+            yield cur.strftime("%Y-%m-%d"), chunk_end.strftime("%Y-%m-%d")
+            cur = chunk_end + timedelta(days=1)
 
     all_rows: list[list] = []
 
     for advertiser_id in advertiser_ids:
-        print(f"拉廣告帳戶 {advertiser_id} 的報表 ({start_date} ~ {end_date})...")
-        items = fetch_report(access_token, advertiser_id, start_date, end_date)
-        rows = [to_sheet_row(advertiser_id, item) for item in items]
-        all_rows.extend(rows)
-        print(f"  → {len(rows)} 筆")
+        chunks = list(date_chunks(start_dt, end_dt))
+        print(f"拉廣告帳戶 {advertiser_id}（{start_date} ~ {end_date}，共 {len(chunks)} 批）...")
+        for c_start, c_end in chunks:
+            items = fetch_report(access_token, advertiser_id, c_start, c_end)
+            rows = [to_sheet_row(advertiser_id, item) for item in items]
+            all_rows.extend(rows)
+            print(f"  {c_start} ~ {c_end}：{len(rows)} 筆")
+        print(f"  → 合計 {len(all_rows)} 筆")
 
     if args.dry_run:
         import json
@@ -228,6 +277,7 @@ def main() -> None:
         sa_file = Path(os.environ["GOOGLE_SERVICE_ACCOUNT_FILE"])
         write_to_sheet(sa_file, sheet_id, tab, all_rows)
         print(f"\n已寫入 {len(all_rows)} 筆到 Google Sheet「{tab}」")
+        update_cover_sheet(sa_file, sheet_id, start_date, end_date, len(all_rows))
 
 
 if __name__ == "__main__":
