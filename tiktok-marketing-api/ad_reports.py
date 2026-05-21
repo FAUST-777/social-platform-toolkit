@@ -39,24 +39,32 @@ METRICS = [
     "ad_name",
 ]
 
+# 與 import_ads_csv.py 的 AD_HEADERS 完全一致（24 欄）
 SHEET_HEADERS = [
-    "日期",
-    "廣告帳戶ID",
-    "活動ID",
-    "活動名稱",
-    "廣告組ID",
-    "廣告組名稱",
-    "廣告ID",
-    "廣告名稱",
-    "花費",
-    "曝光次數",
-    "點擊次數",
-    "觸及人數",
-    "點擊率(%)",
-    "每次點擊成本",
-    "每千次曝光成本",
-    "轉換次數",
-    "每次轉換成本",
+    "日期",           # 1
+    "廣告帳戶ID",     # 2  隱藏
+    "活動ID",         # 3  隱藏
+    "活動名稱",       # 4  隱藏
+    "廣告組ID",       # 5  隱藏
+    "廣告組名稱",     # 6  隱藏
+    "廣告ID",         # 7
+    "廣告名稱",       # 8
+    "KOL",            # 9  ← 從廣告名稱解析
+    "花費",           # 10
+    "曝光次數",       # 11
+    "點擊次數",       # 12
+    "觸及人數",       # 13
+    "點擊率(%)",      # 14
+    "每次點擊成本",   # 15
+    "每千次曝光成本", # 16
+    "轉換次數",       # 17
+    "每次轉換成本",   # 18
+    "時段",           # 19 ← 從廣告名稱解析
+    "直播播放量",     # 20 API 無此數據，留空
+    "直播10秒播放",   # 21
+    "2秒播放率(%)",   # 22
+    "6秒播放率(%)",   # 23
+    "完播率(%)",      # 24
 ]
 
 
@@ -104,27 +112,50 @@ def fetch_report(
     return rows
 
 
+def _parse_kol(name: str) -> str:
+    import re
+    m = re.search(r"[早中午晚]場[\s\-－]+(.+)", name.strip())
+    return m.group(1).strip() if m else ""
+
+
+def _parse_slot(name: str) -> str:
+    import re
+    m = re.search(r"([早中午晚]場)", name.strip())
+    return m.group(1) if m else ""
+
+
 def to_sheet_row(advertiser_id: str, item: dict) -> list:
     dim = item.get("dimensions", {})
     met = item.get("metrics", {})
+    # 日期去掉時間部分（API 回傳 "2026-05-01 00:00:00"）
+    raw_date = dim.get("stat_time_day", "")
+    date_only = raw_date.split(" ")[0] if " " in raw_date else raw_date
+    ad_name = met.get("ad_name", "")
     return [
-        dim.get("stat_time_day", ""),
-        advertiser_id,
-        dim.get("campaign_id", ""),
-        met.get("campaign_name", ""),
-        dim.get("adgroup_id", ""),
-        met.get("adgroup_name", ""),
-        dim.get("ad_id", ""),
-        met.get("ad_name", ""),
-        met.get("spend", ""),
-        met.get("impressions", ""),
-        met.get("clicks", ""),
-        met.get("reach", ""),
-        met.get("ctr", ""),
-        met.get("cpc", ""),
-        met.get("cpm", ""),
-        met.get("conversion", ""),
-        met.get("cost_per_conversion", ""),
+        date_only,                          # 1  日期
+        advertiser_id,                       # 2  廣告帳戶ID
+        dim.get("campaign_id", ""),          # 3  活動ID
+        met.get("campaign_name", ""),        # 4  活動名稱
+        dim.get("adgroup_id", ""),           # 5  廣告組ID
+        met.get("adgroup_name", ""),         # 6  廣告組名稱
+        dim.get("ad_id", ""),               # 7  廣告ID
+        ad_name,                            # 8  廣告名稱
+        _parse_kol(ad_name),                # 9  KOL
+        met.get("spend", ""),               # 10 花費
+        met.get("impressions", ""),         # 11 曝光次數
+        met.get("clicks", ""),              # 12 點擊次數
+        met.get("reach", ""),               # 13 觸及人數
+        met.get("ctr", ""),                 # 14 點擊率(%)
+        met.get("cpc", ""),                 # 15 每次點擊成本
+        met.get("cpm", ""),                 # 16 每千次曝光成本
+        met.get("conversion", ""),          # 17 轉換次數
+        met.get("cost_per_conversion", ""), # 18 每次轉換成本
+        _parse_slot(ad_name),               # 19 時段
+        "",                                 # 20 直播播放量（API無）
+        "",                                 # 21 直播10秒播放
+        "",                                 # 22 2秒播放率(%)
+        "",                                 # 23 6秒播放率(%)
+        "",                                 # 24 完播率(%)
     ]
 
 
@@ -179,13 +210,13 @@ def write_to_sheet(
     s = _sheet_session(service_account_file)
     tab_enc = urllib.parse.quote(tab, safe="")
 
-    # 確認 header
-    r = s.get(f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}/values/{tab_enc}!A1:Q1", timeout=15)
+    # 確認 header（24 欄）
+    r = s.get(f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}/values/{tab_enc}!A1:X1", timeout=15)
     existing = r.json().get("values", [[]])
     if not existing or existing[0] != SHEET_HEADERS:
         s.put(
             f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}"
-            f"/values/{tab_enc}!A1:Q1?valueInputOption=RAW",
+            f"/values/{tab_enc}!A1:X1?valueInputOption=RAW",
             json={"values": [SHEET_HEADERS]}, timeout=15,
         ).raise_for_status()
 
