@@ -55,3 +55,21 @@ jobs:
           git add reports/
           git diff --staged --quiet || git commit -m "chore: weekly TikTok ad report $(date +'%Y-%m-%d')"
           git push
+
+      - name: Slack 通知（成功）
+        if: success()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -s -X POST "$SLACK_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{\"text\": \"✅ *TikTok 週報跑完了*\n日期：$(date +'%Y-%m-%d')\n資料區間：最近 7 天\n已寫入 Google Sheet 與 CSV\"}"
+
+      - name: Slack 通知（失敗）
+        if: failure()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          curl -s -X POST "$SLACK_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{\"text\": \"❌ *TikTok 週報執行失敗*\n日期：$(date +'%Y-%m-%d')\n請到 GitHub Actions 查看錯誤：https://github.com/FAUST-777/social-platform-toolkit/actions\"}"
