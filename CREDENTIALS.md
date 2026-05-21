@@ -1,25 +1,7 @@
 # Credentials Setup
 
-所有機敏憑證（API keys、tokens、service account）存放在獨立的私有 repo：
-
-**👉 https://github.com/FAUST-777/private-credentials-repo（私有）**
-
----
-
-## 快速設定
-
-```bash
-# 1. Clone 憑證 repo
-git clone https://github.com/FAUST-777/private-credentials-repo.git ~/private-credentials-repo
-
-# 2. 複製 .env 到主專案
-cp ~/private-credentials-repo/tiktok-marketing-api/.env \
-   ~/social-platform-toolkit/tiktok-marketing-api/.env
-
-# 3. 複製 tokens
-cp -r ~/private-credentials-repo/tiktok-marketing-api/.tokens \
-      ~/social-platform-toolkit/tiktok-marketing-api/.tokens
-```
+所有機敏憑證（API keys、tokens、service account）存放在獨立的**私有** repo。
+請向專案負責人（Willie Lin）索取存取權限。
 
 ---
 
@@ -27,11 +9,25 @@ cp -r ~/private-credentials-repo/tiktok-marketing-api/.tokens \
 
 | 變數 | 在哪裡取得 |
 |---|---|
-| `TIKTOK_APP_ID` | [TikTok Developer Portal](https://developers.tiktok.com/apps/) |
+| `TIKTOK_APP_ID` | TikTok Developer Portal |
 | `TIKTOK_APP_SECRET` | 同上 |
 | `TIKTOK_ACCESS_TOKEN` | 執行 `python auth_advertiser.py` |
-| `ANTHROPIC_API_KEY` | [platform.anthropic.com/settings/keys](https://platform.anthropic.com/settings/keys) |
-| `GOOGLE_SHEET_ID` | TK大表 URL 中間段 |
-| `GOOGLE_SERVICE_ACCOUNT_FILE` | `~/private-credentials-repo/google/service_account_key.json` |
+| `ANTHROPIC_API_KEY` | platform.anthropic.com/settings/keys |
+| `GOOGLE_SHEET_ID` | 由專案負責人提供 |
+| `GOOGLE_SERVICE_ACCOUNT_FILE` | 由專案負責人提供 service account JSON |
 
-詳細說明見 [private-credentials-repo/README.md](https://github.com/FAUST-777/private-credentials-repo)
+---
+
+## 本機設定步驟
+
+```bash
+# 1. 從專案負責人取得 .env 檔案，放到：
+tiktok-marketing-api/.env
+
+# 2. 從專案負責人取得 .tokens/ 目錄，放到：
+tiktok-marketing-api/.tokens/
+
+# 3. 確認 .env 內 GOOGLE_SERVICE_ACCOUNT_FILE 指向正確路徑
+```
+
+詳細說明請聯絡專案負責人。

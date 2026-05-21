@@ -186,7 +186,7 @@ def update_cover_sheet(
         ["最後更新時間（台灣）", now_tw],
         ["資料區間", f"{start_date}  ~  {end_date}"],
         ["資料筆數", row_count],
-        ["廣告帳戶 ID", "[REDACTED-ADVERTISER-ID]"],
+        ["廣告帳戶 ID", advertiser_id],
         ["資料來源", "TikTok Marketing API"],
         [""],
         ["TikTok 頻道", "https://www.tiktok.com/@17shoptaiwan"],
