@@ -265,8 +265,9 @@ def build_summary(data: list[dict], session: AuthorizedSession, sheet_id: str) -
         json={"requests": reqs}, timeout=10,
     ).raise_for_status()
 
+    n = len(content) + 10
     session.put(
-        f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}/values/成效彙整!A1:K300?valueInputOption=RAW",
+        f"https://sheets.googleapis.com/v4/spreadsheets/{sheet_id}/values/成效彙整!A1:K{n}?valueInputOption=RAW",
         json={"values": content}, timeout=30,
     ).raise_for_status()
     print(f"✅ 「成效彙整」tab 已建立，{len(data)} 筆數據")
