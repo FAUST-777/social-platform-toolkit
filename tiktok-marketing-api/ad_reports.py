@@ -175,6 +175,7 @@ def update_cover_sheet(
     start_date: str,
     end_date: str,
     row_count: int,
+    advertiser_id: str = "",
 ) -> None:
     from datetime import datetime
     import zoneinfo
@@ -345,7 +346,7 @@ def main() -> None:
         sa_file = Path(os.environ["GOOGLE_SERVICE_ACCOUNT_FILE"])
         write_to_sheet(sa_file, sheet_id, tab, all_rows)
         print(f"\n已寫入 {len(all_rows)} 筆到 Google Sheet「{tab}」")
-        update_cover_sheet(sa_file, sheet_id, start_date, end_date, len(all_rows))
+        update_cover_sheet(sa_file, sheet_id, start_date, end_date, len(all_rows), advertiser_ids[-1] if advertiser_ids else "")
 
 
 if __name__ == "__main__":
