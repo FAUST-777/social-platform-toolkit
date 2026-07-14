@@ -1,6 +1,6 @@
 # social-platform-toolkit
 
-> OrderPally（17LIVE 旗下電商品牌）社群平台數據整合工具集：TikTok 廣告投放、KOL 直播、熱門商品趨勢的多方數據管線
+> 社群平台數據整合工具集：TikTok 廣告投放、KOL 直播、熱門商品趨勢的多方數據管線
 
 ## 🎯 用途
 
