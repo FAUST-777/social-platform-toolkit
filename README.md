@@ -1,3 +1,8 @@
+![DEPRECATED](https://img.shields.io/badge/%E2%9A%A0%EF%B8%8F%20%E5%B0%88%E6%A1%88%E5%B7%B2%E9%97%9C%E9%96%89-%E5%AF%86%E7%A2%BC%2FToken%20%E5%B7%B2%E5%85%A8%E9%83%A8%E5%BB%A2%E6%A3%84-yellow?style=for-the-badge)
+
+> [!WARNING]
+> **該專案已經關閉不再使用，內容密碼 / Token 都已經廢棄。**
+
 # social-platform-toolkit
 
 > 社群平台數據整合工具集：TikTok 廣告投放、KOL 直播、熱門商品趨勢的多方數據管線
