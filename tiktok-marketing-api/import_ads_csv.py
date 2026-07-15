@@ -21,7 +21,8 @@ from dotenv import load_dotenv
 from google.auth.transport.requests import AuthorizedSession
 from google.oauth2.service_account import Credentials
 
-ADVERTISER_ID = "[REDACTED-ADVERTISER-ID]"
+load_dotenv()
+ADVERTISER_ID = os.getenv("TIKTOK_ADVERTISER_ID", "")
 
 # 欄位順序依用戶自訂格式（KOL 在第9欄，時段在第19欄）
 # 第 2-6 欄（廣告帳戶ID～廣告組名稱）寫入後會自動隱藏

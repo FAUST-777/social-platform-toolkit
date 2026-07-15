@@ -67,7 +67,7 @@
 | Python 版本要求 | `>=3.11` |
 | 虛擬環境 | ❌ **尚未建立**（`.venv` 不存在） |
 | Google service account 檔 | ❌ **尚未放置**（`service-account.json` 不存在） |
-| 已綁定的 Google Sheet ID | `[REDACTED-SHEET-ID]` |
+| 已綁定的 Google Sheet ID | `[存於 .env 的 GOOGLE_SHEET_ID]` |
 | Sheet 分頁 | `HotProducts` |
 | Git 狀態 | 沒有 `.git`（尚未初始化版本控制） |
 

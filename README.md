@@ -1,7 +1,7 @@
-![DEPRECATED](https://img.shields.io/badge/%E2%9A%A0%EF%B8%8F%20%E5%B0%88%E6%A1%88%E5%B7%B2%E9%97%9C%E9%96%89-%E5%AF%86%E7%A2%BC%2FToken%20%E5%B7%B2%E5%85%A8%E9%83%A8%E5%BB%A2%E6%A3%84-yellow?style=for-the-badge)
+![SUSPENDED](https://img.shields.io/badge/%E2%9A%A0%EF%B8%8F%20%E5%B0%88%E6%A1%88%E5%B7%B2%E6%9A%AB%E5%81%9C%E4%BD%BF%E7%94%A8-%E6%8E%92%E7%A8%8B%E5%B7%B2%E5%81%9C%E6%AD%A2%EF%BC%8F%E6%9C%AC%20repo%20%E4%B8%8D%E5%90%AB%E4%BB%BB%E4%BD%95%E5%AF%86%E7%A2%BC%2FToken-yellow?style=for-the-badge)
 
 > [!WARNING]
-> **該專案已經關閉不再使用，內容密碼 / Token 都已經廢棄。**
+> **該專案已暫停使用，自動排程已停止。本 repo 不存放任何密碼 / Token / 金鑰，所有憑證均保存於外部私有空間。**
 
 # social-platform-toolkit
 
